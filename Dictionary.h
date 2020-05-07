@@ -10,6 +10,10 @@ class Dictionary {
 	Node<K, V>* root;
 	KeyComp cmp;
 
+protected:
+	void rotate_left(Node<K, V>&);
+	void rotate_right(Node<K, V>&);
+
 public:
 	Dictionary();
 	Dictionary(const Dictionary<K, V, F>&);
@@ -25,6 +29,59 @@ public:
 	template <typename K, typename V, typename F>
 	friend ostream& operator << (ostream&, const Dictionary<K, V, F>&);
 };
+
+//rotire nod la stanga in arbore
+template<typename K, typename V, typename F>
+void Dictionary<K, V, F>::rotate_left(Node<K, V>& nod) {
+	//daca este fiu stang
+	if (nod == nod->parent->left) {
+		//legatura parinte cu fiu drept
+		nod->parent->left = nod->right;
+		nod->right->parent = nod->parent;
+	}
+
+	//daca este fiu drept
+	else {
+		//legatura parinte cu fiu drept
+		nod->parent->right = nod->right;
+		nod->right->parent = nod->parent;
+	}
+		
+	//legatura nod cu noul parinte (fiul drept)
+	nod->parent = nod->right;
+	Node<K, V>* aux = nod->parent->left;
+	nod->parent->left = nod;
+
+	//legatura cu fostul arbore stang al parintelui
+	nod->right = aux;
+	aux->parent = nod;
+}
+
+template<typename K, typename V, typename F>
+void Dictionary<K, V, F>::rotate_right(Node<K, V>& nod) {
+	//daca este fiu stang
+	if (nod == nod->parent->left) {
+		//legatura parinte cu fiu stang
+		nod->parent->left = nod->left;
+		nod->left->parent = nod->parent;
+	}
+
+	//daca este fiu drept
+	else {
+		//legatura parinte cu fiu stang
+		nod->parent->right = nod->left;
+		nod->left->parent = nod->parent;
+	}
+
+	//legatura nod cu noul parinte (fiul stang)
+	nod->parent = nod->left;
+	Node<K, V>* aux = nod->parent->right;
+	nod->parent->right = nod;
+
+	//legatura cu fostul arbore drept al parintelui
+	nod->left = aux;
+	aux->parent = nod;
+}
 
 //constructor fara parametrii
 template <typename K, typename V, typename F>
@@ -49,7 +106,7 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 
 	//caut si inserez perechea data in locul potrivit din arbore
 	Node<K, V> p = root;
-	Node<K, V> pred = rood;
+	Node<K, V> pred = root;
 	while (p && ok) {
 		pred = p;
 

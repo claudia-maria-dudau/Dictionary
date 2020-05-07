@@ -1,4 +1,5 @@
 #pragma once
+#include "Dictionary.h"
 #include <iostream>
 using namespace std;
 
@@ -21,7 +22,7 @@ public:
 
 //constructor cu parametrii
 template <typename K, typename V>
-inline Node<K, V>::Node(K& k, V& v) : key(k), value(v), color("red"), left(NULL), right(NULL), parnt(NULL) {}
+inline Node<K, V>::Node(K& k, V& v) : key(k), value(v), color("red"), left(NULL), right(NULL), parent(NULL) {}
 
 //metoda pentru recolorarea unui nod
 template<typename K, typename V>
