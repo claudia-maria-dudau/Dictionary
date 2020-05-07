@@ -7,7 +7,7 @@
 //clasa dictionar
 template <typename K, typename V, typename F = KeyComp<K>>
 class Dictionary {
-	Node<K, V>* start;
+	Node<K, V>* root;
 	KeyComp cmp;
 
 public:
@@ -28,7 +28,7 @@ public:
 
 //constructor fara parametrii
 template <typename K, typename V, typename F>
-inline Dictionary<K, V, F>::Dictionary() : start(NULL){}
+inline Dictionary<K, V, F>::Dictionary() : root(NULL){}
 
 //constructor de copiere
 template<typename K, typename V, typename F>
@@ -42,11 +42,134 @@ Dictionary<K, V, F>::~Dictionary() {
 	this->clear();
 }
 
+//metoda de adaugat valori in dictionar
+template<typename K, typename V, typename F>
+void Dictionary<K, V, F>::push(const K& k, const V& v) {
+	int ok = 1;
+
+	//caut si inserez perechea data in locul potrivit din arbore
+	Node<K, V> p = root;
+	Node<K, V> pred = rood;
+	while (p && ok) {
+		pred = p;
+
+		//daca cheile sunt egale
+		if (!cmp(p->key, k) && !cmp(k, p->key)) {
+			p->value = v;
+			ok = 0;
+		}
+
+		//daca cheia data este mai mica decat cheia din nodul curent
+		else if (cmp(k, p->key))
+			p = p->left;
+
+		//daca chiea data este mai mare decat cheia din nodul curent
+		else
+			p = p->right;
+	}
+
+	//daca cheia nu mai exista deja in arbore o adaug
+	//si ma asigur sa se mentina proprietatile de red black tree
+	if (ok) {
+		p = new Node<K, V>(k, v);
+		p->parent = pred;
+
+		//daca arborele nu avea radacina, o creez
+		//si colorez radacina cu negru
+		if (pred == NULL)
+			this->root = p;
+
+		else {
+			//daca e fiu stang
+			if (cmp(k, pred->key))
+				pred->left = p;
+
+			//daca e fiu drept
+			else
+				pred->right = p;
+		}
+
+
+		//cata vreme culoare lui p este rosu
+		while (p->color == "red") {
+			//daca p este radacina, il coloram negru
+			if (p == root)
+				p->color = "black";
+
+			else {
+				//arborele genealogic al lui p (pun intended)
+				Node<K, V>* parent = p->parent;
+				Node<K, V>* grandparent = parent->parent;
+				Node<K, V>* uncle;
+
+				//daca e fiu stang
+				if (parent->left == p)
+					uncle = grandparent->right;
+
+				//daca e fiu drept
+				else
+					uncle = grandparent->right;
+
+				//daca exista 'bunicul' lui p
+				if (grandparent) {
+					//verific daca 'unchiul' nodului p este rosu
+					//caz in care ii recolorez 'parintele', 'bunicul' si 'unchiul'
+					if (uncle->color == "red") {
+						grandparent->recolorare();
+						parent->recolorare();
+						uncle->recolorare();
+						p = grandparent;
+					}
+
+					//daca 'unchiul' lui p este negru
+					else {
+						//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la stanga
+						//rotim parintele lui p la dreapta
+						if (parent->left == p && grandparent->right == parent) {
+							this->rotate_right(parent);
+							p = parent;
+						}
+
+						//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la dreapta
+						//rotim 'parintele' lui p la stanga
+						else if (parent->right == p && grandparent->left == parent) {
+							this->rotate_left(parent);
+							p = parent;
+						}
+
+						//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
+						//iar 'bunicul' lui p se afla in stanga lui
+						//rotim 'bunicul' lui p la stanga
+						//si recoloroam 'bunicul' si 'patintele'
+						else if (parent->right == p && grandparent->right == parent) {
+							this->rotate_left(grandparent);
+							grandparent->recolorare();
+							parent->recolorare();
+							p = parent;
+						}
+
+						//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
+						//iar 'bunicul' lui p se afla in dreapta lui
+						//rotim 'bunicul' lui p la dreapta
+						//si recoloroam 'bunicul' si 'patintele'
+						else if (parent->right == p && grandparent->right == parent) {
+							this->rotate_right(grandparent);
+							grandparent->recolorare();
+							parent->recolorare();
+							p = parent;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 //metoda de cautare in arbore dupa o anumita cheie ce intoarce
 //nodul ce contine cheia respectiva, sau NULL daca aceasta nu exista
 template<typename K, typename V, typename F>
 Node<K, V>* Dictionary<K, V, F>::search(const K& k) const {
-	Node<K, V>* p = this->start;
+	Node<K, V>* p = this->root;
 	while (p) {
 		//daca cheile sunt egale
 		if (!cmp(p->key, k) && !cmp(k, p->key))
@@ -67,8 +190,8 @@ Node<K, V>* Dictionary<K, V, F>::search(const K& k) const {
 //metoda de golire a dictionarului
 template<typename K, typename V, typename F>
 void Dictionary<K, V, F>::clear() {
-	while (this->start)
-		this->pop(start->key);
+	while (this->root)
+		this->pop(root->key);
 }
 
 //operator de atribuire
@@ -82,7 +205,7 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 		//parcurg dictionarul primit si adaug fiecare 
 		//pereche (key, value) in obiectul curent
 		deque<Node<K, V>*> q;
-		q.push_back(D.start);
+		q.push_back(D.root);
 		while (q) {
 			//daca nodul curent are fiu stang il adaug in coada
 			if (q.front->left != NULL)
@@ -116,7 +239,7 @@ template <typename K, typename V, typename F>
 ostream& operator << (ostream& out, const Dictionary<K, V, F>& D) {
 	//parcurg dictionarul primit
 	deque<Node<K, V>*> q;
-	q.push_back(D.start);
+	q.push_back(D.root);
 	while (q) {
 		//daca nodul curent are fiu stang il adaug in coada
 		if (q.front->left != NULL)
