@@ -22,7 +22,8 @@ public:
 	V operator [] (const K&) const;
 	void operator =(const Dictionary<K, V, F>&);
 
-	friend ostream& operator << (ostream&, const Dictionary&) const;
+	template <typename K, typename V, typename F>
+	friend ostream& operator << (ostream&, const Dictionary<K, V, F>&);
 };
 
 //constructor fara parametrii
@@ -59,26 +60,15 @@ Node<K, V>* Dictionary<K, V, F>::search(const K& k) const {
 		else
 			p = p->right;
 	}
+
 	return NULL;
 }
 
 //metoda de golire a dictionarului
 template<typename K, typename V, typename F>
-inline void Dictionary<K, V, F>::clear() {
+void Dictionary<K, V, F>::clear() {
 	while (this->start)
 		this->pop(start->key);
-}
-
-//operator []pentru obtinerea valorii asociate unei chei date
-template<typename K, typename V, typename F>
-V Dictionary<K, V, F>::operator[](const K& k) const {
-	//verific daca exista cheia in dictionar
-	Node<K, V>* p;
-	if (p = this->search(k))
-		return p->value;
-	
-	//daca cheia nu exista in dictionar, arunc o eroare
-	throw invalid_argument("cheia nu exista in dictionar");
 }
 
 //operator de atribuire
@@ -89,7 +79,7 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 		//sterg elementul curent
 		this->~Dictionary();
 
-		//parcurg dictionarul primit (bfs) si adaug fiecare 
+		//parcurg dictionarul primit si adaug fiecare 
 		//pereche (key, value) in obiectul curent
 		deque<Node<K, V>*> q;
 		q.push_back(D.start);
@@ -109,3 +99,39 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 	}
 }
 
+//operator []pentru obtinerea valorii asociate unei chei date
+template<typename K, typename V, typename F>
+V Dictionary<K, V, F>::operator[](const K& k) const {
+	//verific daca exista cheia in dictionar
+	Node<K, V>* p;
+	if (p = this->search(k))
+		return p->value;
+	
+	//daca cheia nu exista in dictionar, arunc o eroare
+	throw invalid_argument("cheia nu exista in dictionar");
+}
+
+//operator << (afisare)
+template <typename K, typename V, typename F>
+ostream& operator << (ostream& out, const Dictionary<K, V, F>& D) {
+	//parcurg dictionarul primit
+	deque<Node<K, V>*> q;
+	q.push_back(D.start);
+	while (q) {
+		//daca nodul curent are fiu stang il adaug in coada
+		if (q.front->left != NULL)
+			q.push_back(q.front->left);
+
+		//daca nodul curent are fiu drept il adaug in coada
+		if (q.front->right != NULL)
+			q.push_back(q.front->right);
+	
+		//afisez perechea (cheie, valoare) din nodul curent
+		out << "(" << q.front->key << ", " << q.front->value << ")" << endl;
+
+		//scot nodul din coada
+		q.pop_front();
+	}
+
+	return out;
+}
