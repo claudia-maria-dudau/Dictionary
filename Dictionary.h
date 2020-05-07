@@ -62,6 +62,13 @@ Node<K, V>* Dictionary<K, V, F>::search(const K& k) const {
 	return NULL;
 }
 
+//metoda de golire a dictionarului
+template<typename K, typename V, typename F>
+inline void Dictionary<K, V, F>::clear() {
+	while (this->start)
+		this->pop(start->key);
+}
+
 //operator []pentru obtinerea valorii asociate unei chei date
 template<typename K, typename V, typename F>
 V Dictionary<K, V, F>::operator[](const K& k) const {
