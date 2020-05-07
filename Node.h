@@ -10,7 +10,7 @@ class Node {
 	K key;
 	V value;
 	char color;
-	Node* left, * right;
+	Node* left, * right, * parent;
 
 public:
 	Node(K&, V&);	
@@ -20,4 +20,4 @@ public:
 
 //constructor cu parametrii
 template <typename K, typename V>
-Node<K, V>::Node(K& k, V& v) : key(k), value(v), color("r"), left(NULL), right(NULL) {}
+inline Node<K, V>::Node(K& k, V& v) : key(k), value(v), color('r'), left(NULL), right(NULL), parnt(NULL) {}
