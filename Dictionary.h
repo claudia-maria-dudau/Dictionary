@@ -8,7 +8,7 @@
 template <typename K, typename V, typename F = KeyComp<K>>
 class Dictionary {
 	Node<K, V>* root;
-	KeyComp cmp;
+	KeyComp<K> cmp;
 
 protected:
 	void rotate_left(Node<K, V>*);

@@ -1,9 +1,9 @@
 #pragma once
-#include "Dictionary.h"
 #include <iostream>
+#include "KeyComp.h"
 using namespace std;
 
-template <typename K, typename V, typename F> class Dictionary;
+template <typename K, typename V, typename KeyComp> class Dictionary;
 
 //clasa pentru noduri
 template <typename K, typename V>
@@ -17,7 +17,7 @@ public:
 	Node(K&, V&);	
 	void swapColor(Node<K, V>*);
 
-	friend class Dictionary<K, V, F>;
+	friend class Dictionary<K, V, KeyComp<K>>;
 };
 
 //constructor cu parametrii
