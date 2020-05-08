@@ -11,8 +11,8 @@ class Dictionary {
 	KeyComp cmp;
 
 protected:
-	void rotate_left(Node<K, V>&);
-	void rotate_right(Node<K, V>&);
+	void rotate_left(Node<K, V>*);
+	void rotate_right(Node<K, V>*);
 
 public:
 	Dictionary();
@@ -32,7 +32,7 @@ public:
 
 //rotire nod la stanga in arbore
 template<typename K, typename V, typename F>
-void Dictionary<K, V, F>::rotate_left(Node<K, V>& nod) {
+void Dictionary<K, V, F>::rotate_left(Node<K, V>* nod) {
 	//daca este fiu stang
 	if (nod == nod->parent->left) {
 		//legatura parinte cu fiu drept
@@ -57,8 +57,9 @@ void Dictionary<K, V, F>::rotate_left(Node<K, V>& nod) {
 	aux->parent = nod;
 }
 
+//rotire nod la dreapta in arbore
 template<typename K, typename V, typename F>
-void Dictionary<K, V, F>::rotate_right(Node<K, V>& nod) {
+void Dictionary<K, V, F>::rotate_right(Node<K, V>* nod) {
 	//daca este fiu stang
 	if (nod == nod->parent->left) {
 		//legatura parinte cu fiu stang
