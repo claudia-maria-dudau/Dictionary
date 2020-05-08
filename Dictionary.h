@@ -172,9 +172,8 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 					//verific daca 'unchiul' nodului p este rosu
 					//caz in care ii recolorez 'parintele', 'bunicul' si 'unchiul'
 					if (uncle->color == "red") {
-						grandparent->recolorare();
-						parent->recolorare();
-						uncle->recolorare();
+						grandparent->color = "red";
+						parent->color = uncle->color = "black";
 						p = grandparent;
 					}
 
@@ -200,8 +199,7 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 						//si recoloroam 'bunicul' si 'patintele'
 						else if (parent->right == p && grandparent->right == parent) {
 							this->rotate_left(grandparent);
-							grandparent->recolorare();
-							parent->recolorare();
+							parent->swapColor(grandparent);
 							p = parent;
 						}
 
@@ -211,9 +209,231 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 						//si recoloroam 'bunicul' si 'patintele'
 						else if (parent->right == p && grandparent->right == parent) {
 							this->rotate_right(grandparent);
-							grandparent->recolorare();
-							parent->recolorare();
+							parent->swapColor(grandparent);
 							p = parent;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+template<typename K, typename V, typename F>
+void Dictionary<K, V, F>::pop(const K& k) {
+	Node<K, V>* p = this->search(k);
+	Node<K, V>* parent;
+	Node<K, V>* u;
+
+	//verific daca exista valoare cautata in arbore
+	if (p) {
+		//daca p are ambii fii
+		if(p->right && p->left) {
+			//cautam cel mai din dreapta fiu al fiului stang a lui p
+			Node<K, V>* aux = p->left;
+			while (aux->right)
+				aux = aux->right;
+
+			//schimb val lui p cu cele ale lui aux
+			p->key = aux->key;
+			p->value = aux->value;
+			p = aux;
+		}
+		
+		parent = p->parent;
+		
+		//daca p este fiu stang
+		if (parent->left == p) {
+			//daca p are fiu stang, fac legatura intre acesta si radacina
+			if (p->left) {
+				parent->left = p->left;
+				p->left->parent = parent;
+				u = p->left;
+			}
+
+			//daca are fiu drept, sau nici un fiu
+			else {
+				parent->left = p->right;
+				u = p->right;
+
+				//daca exista fiul drept il leg de parinte
+				if (p->right)
+					p->right->parent = parent;
+			}
+		}
+
+		//daca p este fiu drept
+		else {
+			//daca p are fiu stang, fac legatura intre acesta si radacina
+			if (p->left) {
+				parent->right = p->left;
+				p->left->parent = parent;
+				u = p->left;
+			}
+
+			//daca are iu drept, sau nici un fiu
+			else {
+				parent->right = p->right;
+				u = p->right;
+
+				//daca exista fiul drept il leg de parinte
+				if (p->right)
+					p->right->parent = parent;
+			}
+		}
+
+		string colorP;
+		colorP = p->color;
+
+		//sterg nodul p
+		delete p;
+
+		//ma asigur ca se respecta proprietatile de rbt,
+		//fixand eventualele probleme care pot aparea
+
+		string colorU;
+
+		//daca u este NULL, atunci culoarea sa o sa fie negru
+		if (!u)
+			colorU = "black";
+
+		//daca u exista, ii copiez culoarea
+		else
+			colorU = u->color;
+
+		//daca culoarea lui p era rosu
+		//coloram nodul u negru, daca acesta exista
+		if (colorP == "red") {
+			if (u)
+				u->color = "black";
+		}
+
+		//daca p era nod negru
+		else {
+			//daca nodul u este rosu, il colorez negru
+			//(nu este nevoie sa i se verifice exsitenta,
+			//deoarece nodurile NULL sunt negre)
+			if (colorU == "red")
+				u->color = "black";
+			
+			//daca nodul u este si el negru
+			else {
+				//nodul u devine un nod negru dublu
+				colorU = "black_black";
+
+				//cata vreme culoare nodului u este negru_negru,
+				//iar u nu este radacina
+				while (colorU == "black_black" && u != root) {
+					Node<K, V>* sibling = parent->right == u ? parent->left : parent->right;
+
+					//daca culoarea 'fratelui' este rosu
+					if (sibling->color == "red") {
+						//coloram 'fratele' negru, iar 'parintele' rosu
+						sibling->color = "black";
+						parent->color = "red";
+
+						//daca 'fratele' este fiu stang
+						//rotim 'parintele' in dreapta
+						if (parent->left == sibling)
+							this->rotate_right(parent);
+
+						//daca 'fratele' este fiu drept
+						//rotim 'parintele in stanga
+						else
+							this->rotate_left(parent);
+					}
+
+					//daca 'fratele' este negru
+					else {
+						//determin culorile copiilor 'fratelui'
+						string colorNephewLeft;
+						string colorNephewRight;
+
+						//daca 'fratele' nu are fiu stang, 
+						//culoara acestuia o sa fie negru
+						if (!sibling->left)
+							colorNephewLeft == "black";
+
+						//daca fiul stang exista, ii copiez culoarea
+						else
+							colorNephewLeft == sibling->left->color;
+
+						//daca 'fratele' nu are fiu drept, 
+						//culoara acestuia o sa fie negru
+						if (!sibling->right)
+							colorNephewRight == "black";
+
+						//daca fiul drept exista, ii copiez culoarea
+						else
+							colorNephewRight == sibling->left->right;
+
+						//daca 'fratele' are amandoi copii negri
+						if(colorNephewLeft == "black" && colorNephewRight == "black"){
+							sibling->color == "red";
+
+							//nodul parinte va deveni noul nod dublu negru
+							u = parent;
+							parent = parent->parent;
+
+							//daca 'parintele' era rosu, atunci il facem negru
+							//rosu + dublu negru => negru
+							if (u->color == "red")
+								u->color = colorU = "black";
+						}
+
+						//daca 'fratele' are cel putin un fiu rosu
+						else {
+							Node<K, V>* redNephew;
+
+							//daca 'nepotul' stang este rosu
+							if (colorNephewLeft == "red") {
+								redNephew = sibling->left;
+
+								//daca 'fratele' este fiu stang
+								//rotesc 'parintele' la stanga
+								//si colorez nepotul in negru, 
+								//restabilind astfel proprietatile de rbt
+								//(acelasi numar de noduri negre in fiecare subarbore)
+								if (parent->left == sibling) {
+									redNephew->color = "black";
+									this->rotate_right(parent);
+									colorU = "black";
+								}
+
+								//daca 'fratele' este fiu drept
+								//rotesc 'fratele' la dreapta si
+								//recolorez 'fratele' in rosu si 'nepotul' in negru
+								else {
+									sibling->color = "red";
+									redNephew->color = "black";
+									this->rotate_right(sibling);
+								}
+							}
+
+							//daca 'nepotul' drept este rosu
+							else {
+								redNephew = sibling->right;
+
+								//daca 'fratele' este fiu stang
+								//rotesc 'fratele' la stanga si
+								//recolorez 'fratele' in rosu, iar 'nepotul' in negru
+								if (parent->left == sibling) {
+									sibling->color = "red";
+									redNephew->color = "black";
+									this->rotate_left(sibling);
+								}
+
+								//daca 'fratele' este fiu drept
+								//rotesc parintele la stanga
+								//si colorez nepotul in negru, 
+								//restabilind astfel proprietatile de rbt
+								//(acelasi numar de noduri negre in fiecare subarbore)
+								else {
+									redNephew->color = "black";
+									this->rotate_left(parent);
+									colorU = "black";
+								}
+							}
 						}
 					}
 				}

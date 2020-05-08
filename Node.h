@@ -15,7 +15,7 @@ class Node {
 
 public:
 	Node(K&, V&);	
-	void recolorare();
+	void swapColor(Node<K, V>&);
 
 	friend class Dictionary<K, V, F>;
 };
@@ -24,11 +24,9 @@ public:
 template <typename K, typename V>
 inline Node<K, V>::Node(K& k, V& v) : key(k), value(v), color("red"), left(NULL), right(NULL), parent(NULL) {}
 
-//metoda pentru recolorarea unui nod
 template<typename K, typename V>
-void Node<K, V>::recolorare() {
-	if (this->color == "red")
-		this->color = "black";
-	else
-		this->color = "red";
+void Node<K, V>::swapColor(Node<K, V>& node) {
+	string culAux = this->color;
+	this->color = node->color;
+	node->color = culAux;
 }
