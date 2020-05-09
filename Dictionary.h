@@ -28,60 +28,106 @@ public:
 
 	template <typename K, typename V, typename F>
 	friend ostream& operator << (ostream&, const Dictionary<K, V, F>&);
+
+	friend class Test;
 };
 
 //rotire nod la stanga in arbore
 template<typename K, typename V, typename F>
 void Dictionary<K, V, F>::rotate_left(Node<K, V>* nod) {
-	//daca este fiu stang
-	if (nod == nod->parent->left) {
-		//legatura parinte cu fiu drept
-		nod->parent->left = nod->right;
-		nod->right->parent = nod->parent;
+	//daca nodul este radacina
+	if (nod == root) {
+		//mut radacina
+		root = nod->right;
+
+		//refac leg nod - parinte nou
+		nod->parent = nod->right;
+
+		//legatura cu fiul stang al noului parinte
+		Node<K, V>* aux = root->left;
+		nod->right = aux;
+
+		//legatura cu noul parinte
+		root->left = nod;
 	}
 
-	//daca este fiu drept
 	else {
-		//legatura parinte cu fiu drept
-		nod->parent->right = nod->right;
-		nod->right->parent = nod->parent;
-	}
-		
-	//legatura nod cu noul parinte (fiul drept)
-	nod->parent = nod->right;
-	Node<K, V>* aux = nod->parent->left;
-	nod->parent->left = nod;
+		//daca este fiu stang
+		if (nod == nod->parent->left) {
+			//legatura parinte cu fiu drept
+			nod->parent->left = nod->right;
+			nod->right->parent = nod->parent;
+		}
 
-	//legatura cu fostul arbore stang al parintelui
-	nod->right = aux;
-	aux->parent = nod;
+		//daca este fiu drept
+		else {
+			//legatura parinte cu fiu drept
+			nod->parent->right = nod->right;
+			nod->right->parent = nod->parent;
+		}
+
+		//legatura nod cu noul parinte (fiul drept)
+		nod->parent = nod->right;
+		Node<K, V>* aux = nod->parent->left;
+		nod->parent->left = nod;
+
+		//legatura cu fostul arbore stang al parintelui
+		nod->right = aux;
+
+		//daca exista subarbore stang
+		//il leg de nod
+		if(aux)
+			aux->parent = nod;
+	}
 }
 
 //rotire nod la dreapta in arbore
 template<typename K, typename V, typename F>
 void Dictionary<K, V, F>::rotate_right(Node<K, V>* nod) {
-	//daca este fiu stang
-	if (nod == nod->parent->left) {
-		//legatura parinte cu fiu stang
-		nod->parent->left = nod->left;
-		nod->left->parent = nod->parent;
+	//daca nodul este radacina
+	if (nod == root) {
+		//mut radacina
+		root = nod->left;
+
+		//refac leg nod - parinte nou
+		nod->parent = nod->left;
+
+		//legatura cu fiul drept al noului parinte
+		Node<K, V>* aux = root->right;
+		nod->left = aux;
+
+		//legatura cu noul parinte
+		root->right = nod;
 	}
 
-	//daca este fiu drept
 	else {
-		//legatura parinte cu fiu stang
-		nod->parent->right = nod->left;
-		nod->left->parent = nod->parent;
+		//daca este fiu stang
+		if (nod == nod->parent->left) {
+			//legatura parinte cu fiu stang
+			nod->parent->left = nod->left;
+			nod->left->parent = nod->parent;
+		}
+
+		//daca este fiu drept
+		else {
+			//legatura parinte cu fiu stang
+			nod->parent->right = nod->left;
+			nod->left->parent = nod->parent;
+		}
+
+		//legatura nod cu noul parinte (fiul stang)
+		nod->parent = nod->left;
+		Node<K, V>* aux = nod->parent->right;
+		nod->parent->right = nod;
+
+		//legatura cu fostul arbore drept al parintelui
+		nod->left = aux;
+
+		//daca exista subarbore drept
+		//il leg de nod
+		if(aux)
+			aux->parent = nod;
 	}
-
-	//legatura nod cu noul parinte (fiul stang)
-	nod->parent = nod->left;
-	Node<K, V>* aux = nod->parent->right;
-	nod->parent->right = nod;
-
-	//legatura cu fostul arbore drept al parintelui
-	nod->left = aux;
-	aux->parent = nod;
 }
 
 //constructor fara parametrii
@@ -106,8 +152,8 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 	int ok = 1;
 
 	//caut si inserez perechea data in locul potrivit din arbore
-	Node<K, V> p = root;
-	Node<K, V> pred = root;
+	Node<K, V>* p = root;
+	Node<K, V>* pred = root;
 	while (p && ok) {
 		pred = p;
 
@@ -149,79 +195,80 @@ void Dictionary<K, V, F>::push(const K& k, const V& v) {
 
 
 		//cata vreme culoare lui p este rosu
-		while (p->color == "red") {
-			//daca p este radacina, il coloram negru
-			if (p == root)
-				p->color = "black";
+		while (p->parent && p->parent->color == "red") {
+			//arborele genealogic al lui p (pun intended)
+			Node<K, V>* parent = p->parent;
+			Node<K, V>* grandparent = parent->parent;
+			Node<K, V>* uncle;
 
-			else {
-				//arborele genealogic al lui p (pun intended)
-				Node<K, V>* parent = p->parent;
-				Node<K, V>* grandparent = parent->parent;
-				Node<K, V>* uncle;
-
-				//daca e fiu stang
-				if (parent->left == p)
+			//daca exista 'bunicul' lui p
+			if (grandparent) {
+				//daca 'parintele' e fiu stang
+				if (grandparent->left == parent)
 					uncle = grandparent->right;
 
 				//daca e fiu drept
 				else
-					uncle = grandparent->right;
+					uncle = grandparent->left;
 
-				//daca exista 'bunicul' lui p
-				if (grandparent) {
-					//verific daca 'unchiul' nodului p este rosu
-					//caz in care ii recolorez 'parintele', 'bunicul' si 'unchiul'
-					if (uncle->color == "red") {
-						grandparent->color = "red";
-						parent->color = uncle->color = "black";
-						p = grandparent;
+				//verific daca 'unchiul' nodului p este rosu
+				//caz in care ii recolorez 'parintele', 'bunicul' si 'unchiul'
+				if (uncle && uncle->color == "red") {
+					grandparent->color = "red";
+					parent->color = uncle->color = "black";
+					p = grandparent;
+				}
+
+				//daca 'unchiul' lui p este negru
+				else {
+					//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la stanga
+					//rotim parintele lui p la dreapta
+					if (parent->left == p && grandparent->right == parent) {
+						this->rotate_right(parent);
+						p = parent;
 					}
 
-					//daca 'unchiul' lui p este negru
-					else {
-						//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la stanga
-						//rotim parintele lui p la dreapta
-						if (parent->left == p && grandparent->right == parent) {
-							this->rotate_right(parent);
-							p = parent;
-						}
+					//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la dreapta
+					//rotim 'parintele' lui p la stanga
+					else if (parent->right == p && grandparent->left == parent) {
+						this->rotate_left(parent);
+						p = parent;
+					}
 
-						//daca p formeaza cu 'parintele' si 'bunicul' sau un triunghi la dreapta
-						//rotim 'parintele' lui p la stanga
-						else if (parent->right == p && grandparent->left == parent) {
-							this->rotate_left(parent);
-							p = parent;
-						}
+					//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
+					//iar 'bunicul' lui p se afla in stanga lui
+					//rotim 'bunicul' lui p la stanga
+					//si recoloroam 'bunicul' si 'patintele'
+					else if (parent->right == p && grandparent->right == parent) {
+						this->rotate_left(grandparent);
+						parent->swapColor(grandparent);
+					}
 
-						//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
-						//iar 'bunicul' lui p se afla in stanga lui
-						//rotim 'bunicul' lui p la stanga
-						//si recoloroam 'bunicul' si 'patintele'
-						else if (parent->right == p && grandparent->right == parent) {
-							this->rotate_left(grandparent);
-							parent->swapColor(grandparent);
-							p = parent;
-						}
-
-						//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
-						//iar 'bunicul' lui p se afla in dreapta lui
-						//rotim 'bunicul' lui p la dreapta
-						//si recoloroam 'bunicul' si 'patintele'
-						else if (parent->right == p && grandparent->right == parent) {
-							this->rotate_right(grandparent);
-							parent->swapColor(grandparent);
-							p = parent;
-						}
+					//daca p formeaza cu 'parintele' si 'bunicul' sau o linie,
+					//iar 'bunicul' lui p se afla in dreapta lui
+					//rotim 'bunicul' lui p la dreapta
+					//si recoloroam 'bunicul' si 'patintele'
+					else if (parent->right == p && grandparent->right == parent) {
+						this->rotate_right(grandparent);
+						parent->swapColor(grandparent);
 					}
 				}
 			}
 		}
+
+		//daca p este radacina, il coloram negru
+		if (p == root)
+			p->color = "black";
 	}
 }
 
+//metoda de eliminare valori din dictionar dupa cheie
 template<typename K, typename V, typename F>
 void Dictionary<K, V, F>::pop(const K& k) {
+	//daca dictionarul este gol
+	if (root == NULL)
+		throw underflow_error("Dictionarul este vid");
+
 	Node<K, V>* p = this->search(k);
 	Node<K, V>* parent;
 	Node<K, V>* u;
@@ -243,43 +290,73 @@ void Dictionary<K, V, F>::pop(const K& k) {
 		
 		parent = p->parent;
 		
-		//daca p este fiu stang
-		if (parent->left == p) {
+		//daca nodul este radacina
+		if (p == root) {
 			//daca p are fiu stang, fac legatura intre acesta si radacina
 			if (p->left) {
-				parent->left = p->left;
-				p->left->parent = parent;
+				root = p->left;
+				p->left->parent = NULL;
 				u = p->left;
 			}
 
-			//daca are fiu drept, sau nici un fiu
-			else {
-				parent->left = p->right;
+			//daca are fiu drept
+			else if (p->right){
+				root = p->right;
+				p->right->parent = NULL;
 				u = p->right;
+			}
 
-				//daca exista fiul drept il leg de parinte
-				if (p->right)
-					p->right->parent = parent;
+			//daca nu are nici un fiu inseamna ca
+			//arborele contine doar radacina
+			//prin urmare sterg radacina si ies
+			//intrucat nu are sens sa verific
+			//daca se pastreaza proprietatile de rbt
+			else {
+				delete p;
+				root = NULL;
+				return;
 			}
 		}
-
-		//daca p este fiu drept
+		
 		else {
-			//daca p are fiu stang, fac legatura intre acesta si radacina
-			if (p->left) {
-				parent->right = p->left;
-				p->left->parent = parent;
-				u = p->left;
+			//daca p este fiu stang
+			if (parent->left == p) {
+				//daca p are fiu stang, fac legatura intre acesta si radacina
+				if (p->left) {
+					parent->left = p->left;
+					p->left->parent = parent;
+					u = p->left;
+				}
+
+				//daca are fiu drept, sau nici un fiu
+				else {
+					parent->left = p->right;
+					u = p->right;
+
+					//daca exista fiul drept il leg de parinte
+					if (p->right)
+						p->right->parent = parent;
+				}
 			}
 
-			//daca are iu drept, sau nici un fiu
+			//daca p este fiu drept
 			else {
-				parent->right = p->right;
-				u = p->right;
+				//daca p are fiu stang, fac legatura intre acesta si radacina
+				if (p->left) {
+					parent->right = p->left;
+					p->left->parent = parent;
+					u = p->left;
+				}
 
-				//daca exista fiul drept il leg de parinte
-				if (p->right)
-					p->right->parent = parent;
+				//daca are iu drept, sau nici un fiu
+				else {
+					parent->right = p->right;
+					u = p->right;
+
+					//daca exista fiul drept il leg de parinte
+					if (p->right)
+						p->right->parent = parent;
+				}
 			}
 		}
 
@@ -357,20 +434,20 @@ void Dictionary<K, V, F>::pop(const K& k) {
 
 						//daca fiul stang exista, ii copiez culoarea
 						else
-							colorNephewLeft == sibling->left->color;
+							colorNephewLeft = sibling->left->color;
 
 						//daca 'fratele' nu are fiu drept, 
 						//culoara acestuia o sa fie negru
 						if (!sibling->right)
-							colorNephewRight == "black";
+							colorNephewRight = "black";
 
 						//daca fiul drept exista, ii copiez culoarea
 						else
-							colorNephewRight == sibling->left->right;
+							colorNephewRight = sibling->right->color;
 
 						//daca 'fratele' are amandoi copii negri
 						if(colorNephewLeft == "black" && colorNephewRight == "black"){
-							sibling->color == "red";
+							sibling->color = "red";
 
 							//nodul parinte va deveni noul nod dublu negru
 							u = parent;
@@ -441,6 +518,10 @@ void Dictionary<K, V, F>::pop(const K& k) {
 			}
 		}
 	}
+
+	//daca cheia transmisa nu exista in dictionar
+	else 
+		throw invalid_argument("Cheia nu exista in dictionar");
 }
 
 //metoda de cautare in arbore dupa o anumita cheie ce intoarce
@@ -468,7 +549,7 @@ Node<K, V>* Dictionary<K, V, F>::search(const K& k) const {
 //metoda de golire a dictionarului
 template<typename K, typename V, typename F>
 void Dictionary<K, V, F>::clear() {
-	while (this->root)
+	while (this->root != NULL)
 		this->pop(root->key);
 }
 
@@ -485,16 +566,18 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 		deque<Node<K, V>*> q;
 		q.push_back(D.root);
 		while (q) {
+			Node<K, V>* front = q.front();
+
 			//daca nodul curent are fiu stang il adaug in coada
-			if (q.front->left != NULL)
-				q.push_back(q.front->left);
+			if (front->left != NULL)
+				q.push_back(front->left);
 
 			//daca nodul curent are fiu drept il adaug in coada
-			if (q.front->right != NULL)
-				q.push_back(q.front->right);
+			if (front->right != NULL)
+				q.push_back(front->right);
 
 			//adaug nodul curent in dictionar
-			this->push(q.front->key, q.front->value);
+			this->push(front->key, front->value);
 			q.pop_front();
 		}
 	}
@@ -518,17 +601,19 @@ ostream& operator << (ostream& out, const Dictionary<K, V, F>& D) {
 	//parcurg dictionarul primit
 	deque<Node<K, V>*> q;
 	q.push_back(D.root);
-	while (q) {
+	while (q.size()) {
+		Node<K, V>* front = q.front();
+
 		//daca nodul curent are fiu stang il adaug in coada
-		if (q.front->left != NULL)
-			q.push_back(q.front->left);
+		if (front->getLeft() != NULL)
+			q.push_back(front->getLeft());
 
 		//daca nodul curent are fiu drept il adaug in coada
-		if (q.front->right != NULL)
-			q.push_back(q.front->right);
+		if (front->getRight() != NULL)
+			q.push_back(front->getRight());
 	
 		//afisez perechea (cheie, valoare) din nodul curent
-		out << "(" << q.front->key << ", " << q.front->value << ")" << endl;
+		out << "(" << front->getKey() << ", " << front->getValue() << ")" << " ";
 
 		//scot nodul din coada
 		q.pop_front();
