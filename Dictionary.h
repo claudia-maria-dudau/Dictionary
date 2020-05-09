@@ -24,7 +24,7 @@ public:
 	void clear();
 
 	V operator [] (const K&) const;
-	void operator =(const Dictionary<K, V, F>&);
+	void operator =(const Dictionary<K, V, F>*);
 
 	template <typename K, typename V, typename F>
 	friend ostream& operator << (ostream&, const Dictionary<K, V, F>&);
@@ -555,7 +555,7 @@ void Dictionary<K, V, F>::clear() {
 
 //operator de atribuire
 template<typename K, typename V, typename F>
-void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
+void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>* D) {
 	//daca elementul curent este diferit de cel primit
 	if (this != D) {
 		//sterg elementul curent
@@ -565,7 +565,7 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 		//pereche (key, value) in obiectul curent
 		deque<Node<K, V>*> q;
 		q.push_back(D.root);
-		while (q) {
+		while (q.size()) {
 			Node<K, V>* front = q.front();
 
 			//daca nodul curent are fiu stang il adaug in coada
