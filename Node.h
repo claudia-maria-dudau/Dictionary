@@ -19,6 +19,7 @@ public:
 
 	K getKey();
 	V getValue();
+	string getColor();
 	Node<K, V>* getLeft();
 	Node<K, V>* getRight();
 
@@ -47,6 +48,13 @@ K Node<K, V>::getKey() {
 template<typename K, typename V>
 V Node<K, V>::getValue() {
 	return this->value;
+}
+
+//obtinere culoare
+template<typename K, typename V>
+inline string Node<K, V>::getColor()
+{
+	return this->color;
 }
 
 //obtinere fiu stang

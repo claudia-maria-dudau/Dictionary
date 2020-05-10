@@ -24,7 +24,7 @@ public:
 	void clear();
 
 	V operator [] (const K&) const;
-	void operator =(const Dictionary<K, V, F>*);
+	Dictionary<K, V, F>& operator =(const Dictionary<K, V, F>&);
 
 	template <typename K, typename V, typename F>
 	friend ostream& operator << (ostream&, const Dictionary<K, V, F>&);
@@ -39,16 +39,7 @@ void Dictionary<K, V, F>::rotate_left(Node<K, V>* nod) {
 	if (nod == root) {
 		//mut radacina
 		root = nod->right;
-
-		//refac leg nod - parinte nou
-		nod->parent = nod->right;
-
-		//legatura cu fiul stang al noului parinte
-		Node<K, V>* aux = root->left;
-		nod->right = aux;
-
-		//legatura cu noul parinte
-		root->left = nod;
+		root->parent = NULL;
 	}
 
 	else {
@@ -65,20 +56,19 @@ void Dictionary<K, V, F>::rotate_left(Node<K, V>* nod) {
 			nod->parent->right = nod->right;
 			nod->right->parent = nod->parent;
 		}
-
-		//legatura nod cu noul parinte (fiul drept)
-		nod->parent = nod->right;
-		Node<K, V>* aux = nod->parent->left;
-		nod->parent->left = nod;
-
-		//legatura cu fostul arbore stang al parintelui
-		nod->right = aux;
-
-		//daca exista subarbore stang
-		//il leg de nod
-		if(aux)
-			aux->parent = nod;
 	}
+
+	//legatura nod cu noul parinte (fiul drept)
+	nod->parent = nod->right;
+	Node<K, V>* aux = nod->parent->left;
+	nod->parent->left = nod;
+
+	//legatura cu fostul arbore stang al parintelui
+	nod->right = aux;
+
+	//daca exista subarbore stang il leg de nod
+	if (aux)
+		aux->parent = nod;
 }
 
 //rotire nod la dreapta in arbore
@@ -88,16 +78,7 @@ void Dictionary<K, V, F>::rotate_right(Node<K, V>* nod) {
 	if (nod == root) {
 		//mut radacina
 		root = nod->left;
-
-		//refac leg nod - parinte nou
-		nod->parent = nod->left;
-
-		//legatura cu fiul drept al noului parinte
-		Node<K, V>* aux = root->right;
-		nod->left = aux;
-
-		//legatura cu noul parinte
-		root->right = nod;
+		root->parent = NULL;
 	}
 
 	else {
@@ -114,20 +95,21 @@ void Dictionary<K, V, F>::rotate_right(Node<K, V>* nod) {
 			nod->parent->right = nod->left;
 			nod->left->parent = nod->parent;
 		}
-
-		//legatura nod cu noul parinte (fiul stang)
-		nod->parent = nod->left;
-		Node<K, V>* aux = nod->parent->right;
-		nod->parent->right = nod;
-
-		//legatura cu fostul arbore drept al parintelui
-		nod->left = aux;
-
-		//daca exista subarbore drept
-		//il leg de nod
-		if(aux)
-			aux->parent = nod;
 	}
+
+	//legatura nod cu noul parinte (fiul stang)
+	nod->parent = nod->left;
+	Node<K, V>* aux = nod->parent->right;
+	nod->parent->right = nod;
+
+	//legatura cu fostul arbore drept al parintelui
+	nod->left = aux;
+
+	//daca exista subarbore drept
+	//il leg de nod
+	if (aux)
+		aux->parent = nod;
+
 }
 
 //constructor fara parametrii
@@ -360,8 +342,7 @@ void Dictionary<K, V, F>::pop(const K& k) {
 			}
 		}
 
-		string colorP;
-		colorP = p->color;
+		string colorP = p->color;
 
 		//sterg nodul p
 		delete p;
@@ -369,15 +350,7 @@ void Dictionary<K, V, F>::pop(const K& k) {
 		//ma asigur ca se respecta proprietatile de rbt,
 		//fixand eventualele probleme care pot aparea
 
-		string colorU;
-
-		//daca u este NULL, atunci culoarea sa o sa fie negru
-		if (!u)
-			colorU = "black";
-
-		//daca u exista, ii copiez culoarea
-		else
-			colorU = u->color;
+		string colorU = !u ? "black" : u->color;
 
 		//daca culoarea lui p era rosu
 		//coloram nodul u negru, daca acesta exista
@@ -424,26 +397,8 @@ void Dictionary<K, V, F>::pop(const K& k) {
 					//daca 'fratele' este negru
 					else {
 						//determin culorile copiilor 'fratelui'
-						string colorNephewLeft;
-						string colorNephewRight;
-
-						//daca 'fratele' nu are fiu stang, 
-						//culoara acestuia o sa fie negru
-						if (!sibling->left)
-							colorNephewLeft == "black";
-
-						//daca fiul stang exista, ii copiez culoarea
-						else
-							colorNephewLeft = sibling->left->color;
-
-						//daca 'fratele' nu are fiu drept, 
-						//culoara acestuia o sa fie negru
-						if (!sibling->right)
-							colorNephewRight = "black";
-
-						//daca fiul drept exista, ii copiez culoarea
-						else
-							colorNephewRight = sibling->right->color;
+						string colorNephewLeft = !sibling->left ? "black" : sibling->left->color;
+						string colorNephewRight = !sibling->right ? "black" : sibling->right->color;
 
 						//daca 'fratele' are amandoi copii negri
 						if(colorNephewLeft == "black" && colorNephewRight == "black"){
@@ -476,14 +431,16 @@ void Dictionary<K, V, F>::pop(const K& k) {
 									redNephew->color = "black";
 									this->rotate_right(parent);
 									colorU = "black";
+
+									if(colorNephewRight != "red")
+										parent->swapColor(sibling);
 								}
 
 								//daca 'fratele' este fiu drept
 								//rotesc 'fratele' la dreapta si
 								//recolorez 'fratele' in rosu si 'nepotul' in negru
 								else {
-									sibling->color = "red";
-									redNephew->color = "black";
+									sibling->swapColor(redNephew);
 									this->rotate_right(sibling);
 								}
 							}
@@ -496,8 +453,7 @@ void Dictionary<K, V, F>::pop(const K& k) {
 								//rotesc 'fratele' la stanga si
 								//recolorez 'fratele' in rosu, iar 'nepotul' in negru
 								if (parent->left == sibling) {
-									sibling->color = "red";
-									redNephew->color = "black";
+									sibling->swapColor(redNephew);
 									this->rotate_left(sibling);
 								}
 
@@ -509,6 +465,7 @@ void Dictionary<K, V, F>::pop(const K& k) {
 								else {
 									redNephew->color = "black";
 									this->rotate_left(parent);
+									parent->swapColor(sibling);
 									colorU = "black";
 								}
 							}
@@ -555,9 +512,9 @@ void Dictionary<K, V, F>::clear() {
 
 //operator de atribuire
 template<typename K, typename V, typename F>
-void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>* D) {
+Dictionary<K, V, F>& Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>& D) {
 	//daca elementul curent este diferit de cel primit
-	if (this != D) {
+	if (this != &D) {
 		//sterg elementul curent
 		this->~Dictionary();
 
@@ -580,6 +537,8 @@ void Dictionary<K, V, F>::operator =(const Dictionary<K, V, F>* D) {
 			this->push(front->key, front->value);
 			q.pop_front();
 		}
+
+		return *this;
 	}
 }
 

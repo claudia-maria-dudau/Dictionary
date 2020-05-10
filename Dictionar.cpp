@@ -3,6 +3,6 @@
 
 int main() {
     Test::test_Dictionary();
-    cout << "Fmm Radu si rbt-ul lui\n";
+    cout << "Merge";
     return 0;
 }
